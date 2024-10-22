@@ -1,14 +1,34 @@
 const express = require('express');
-const { placeOrder, getOrderById, trackOrder, assignDeliveryPartner, updateDeliveryStatus } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  createOrder,
+  getOrderById,
+  getOrderHistory,
+  trackOrder,
+  assignDeliveryPartner,
+  updateDeliveryStatus,
+  getAllOrders,
+  cancelOrder,
+} = require('../controllers/orderController');
+const { protect, admin, delivery } = require('../middleware/authMiddleware');
+
 const router = express.Router();
 
-router.post('/checkout', protect, placeOrder);
-router.get('/:id', protect, getOrderById);
-router.get('/:id/track', protect, trackOrder);
+// Customer order management
+router.post('/checkout', protect, createOrder); // Place an order (checkout)
+router.get('/:orderId', protect, getOrderById); // Fetch order details
+router.get('/history', protect, getOrderHistory); // Order history for the user
 
-// Admin routes for delivery management
-router.post('/:id/assign', protect, assignDeliveryPartner);
-router.post('/delivery/update-status', protect, updateDeliveryStatus);
+// Order tracking
+router.get('/:orderId/track', protect, trackOrder);
+
+// Admin operations
+router.post('/:orderId/assign', protect, admin, assignDeliveryPartner); // Assign delivery partner
+router.put('/:orderId/cancel', protect, admin, cancelOrder); // Admin cancel order
+
+// Delivery partner updates
+router.post('/delivery/update-status', protect, delivery, updateDeliveryStatus); // Delivery partner updates status
+
+// Fetch all orders (admin only)
+router.get('/admin/all', protect, admin, getAllOrders);
 
 module.exports = router;
