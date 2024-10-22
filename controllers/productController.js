@@ -1,55 +1,61 @@
 const Product = require('../models/Product');
 
-// Get all products
-const getProducts = async (req, res) => {
-  const products = await Product.find({});
-  res.json(products);
+// Get All Products
+exports.getAllProducts = async (req, res) => {
+  const products = await Product.find();
+  res.status(200).json(products);
 };
 
-// Get product by ID
-const getProductById = async (req, res) => {
+// Get Product by ID
+exports.getProductById = async (req, res) => {
   const product = await Product.findById(req.params.id);
-  if (product) {
-    res.json(product);
-  } else {
-    res.status(404).json({ message: 'Product not found' });
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
   }
+  res.status(200).json(product);
 };
 
-// Create a new product (admin only)
-const createProduct = async (req, res) => {
-  const { name, description, price, category, stock } = req.body;
-  const product = new Product({ name, description, price, category, stock });
-  const createdProduct = await product.save();
-  res.status(201).json(createdProduct);
+// Add New Product (Admin only)
+exports.addProduct = async (req, res) => {
+  const { name, price, stock, description, category } = req.body;
+
+  // Create a new product
+  const product = await Product.create({
+    name,
+    price,
+    stock,
+    description,
+    category
+  });
+
+  res.status(201).json(product);
 };
 
-// Update product details (admin only)
-const updateProduct = async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  if (product) {
-    product.name = req.body.name || product.name;
-    product.description = req.body.description || product.description;
-    product.price = req.body.price || product.price;
-    product.category = req.body.category || product.category;
-    product.stock = req.body.stock || product.stock;
+// Update Product (Admin only)
+exports.updateProduct = async (req, res) => {
+  const { name, price, stock, description } = req.body;
 
-    const updatedProduct = await product.save();
-    res.json(updatedProduct);
-  } else {
-    res.status(404).json({ message: 'Product not found' });
+  // Find the product by ID and update it
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    { name, price, stock, description },
+    { new: true }
+  );
+
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
   }
+
+  res.status(200).json(product);
 };
 
-// Delete product (admin only)
-const deleteProduct = async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  if (product) {
-    await product.remove();
-    res.json({ message: 'Product removed' });
-  } else {
-    res.status(404).json({ message: 'Product not found' });
+// Delete Product (Admin only)
+exports.deleteProduct = async (req, res) => {
+  const product = await Product.findByIdAndDelete(req.params.id);
+
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
   }
-};
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };
+  res.status(204).send();
+};
