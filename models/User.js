@@ -1,32 +1,44 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const userSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ['customer', 'admin', 'delivery'],
+      default: 'customer', // Defaults to customer
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
+    address: {
+      type: String,
+    },
+    preferredPaymentMethod: {
+      type: String,
+      enum: ['credit_card', 'paypal', 'razorpay', 'stripe'],
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  phone: String,
-  address: String,
-  role: {
-    type: String,
-    enum: ['customer', 'delivery', 'admin'],
-    default: 'customer',
-  },
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  }
+);
 
-// Encrypt password before saving
+// Hash the password before saving the user
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();
@@ -35,7 +47,7 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Compare passwords
+// Method to check if entered password matches the hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
